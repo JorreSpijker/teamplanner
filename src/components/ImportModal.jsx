@@ -1,0 +1,154 @@
+import { useState } from 'react'
+import { parseExcelFile } from '../utils/importHelpers'
+
+export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onClose }) {
+  const [tab, setTab] = useState('excel')
+  const [error, setError] = useState('')
+  const [preview, setPreview] = useState(null)
+  const [pendingPlayers, setPendingPlayers] = useState(null)
+
+  const handleExcelFile = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setError('')
+    try {
+      const players = await parseExcelFile(file)
+      setPendingPlayers(players)
+      setPreview(players)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleJSONFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!data.players || !data.teams) throw new Error('Ongeldig JSON formaat. Verwacht: { players, teams }')
+        onImportJSON(data)
+        onClose()
+      } catch (err) {
+        setError(err.message)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const confirmNewPlan = () => {
+    if (pendingPlayers) {
+      onNewPlan(pendingPlayers)
+      onClose()
+    }
+  }
+
+  const confirmAddPlayers = () => {
+    if (pendingPlayers) {
+      onAddPlayers(pendingPlayers)
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div
+        className="bg-white rounded-xl p-6 w-[520px] shadow-xl max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Nieuwe teamindeling</h2>
+
+        <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-lg">
+          {['excel', 'json'].map(t => (
+            <button
+              key={t}
+              onClick={() => { setTab(t); setError(''); setPreview(null) }}
+              className={`flex-1 py-2 text-sm rounded-md font-medium transition-colors ${
+                tab === t ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t === 'excel' ? 'Excel importeren' : 'JSON importeren'}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'excel' && (
+          <div>
+            <p className="text-sm text-gray-500 mb-3">
+              Excel bestand met kolommen: <strong>naam</strong>, <strong>geboortedatum</strong>, <strong>geslacht</strong> (m/v of man/vrouw).
+            </p>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleExcelFile}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {preview && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">{preview.length} spelers gevonden:</p>
+                <div className="max-h-52 overflow-y-auto border border-gray-200 rounded-lg">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-500">Naam</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-500">Geboortedatum</th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-500">Geslacht</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.map((p, i) => (
+                        <tr key={p.id} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-3 py-1.5">{p.name}</td>
+                          <td className="px-3 py-1.5">{p.birthdate}</td>
+                          <td className="px-3 py-1.5">{p.gender === 'f' ? '♀ Vrouw' : '♂ Man'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Annuleren</button>
+                  <button
+                    onClick={confirmAddPlayers}
+                    className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700"
+                  >
+                    Toevoegen aan lijst
+                  </button>
+                  <button
+                    onClick={confirmNewPlan}
+                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Nieuwe indeling starten
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'json' && (
+          <div>
+            <p className="text-sm text-gray-500 mb-3">
+              Importeer eerder geëxporteerde JSON teamindeling. Laadt spelers én teams.
+            </p>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleJSONFile}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
+            />
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          </div>
+        )}
+
+        {!preview && (
+          <div className="flex justify-end mt-5">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Sluiten</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

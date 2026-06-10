@@ -1,0 +1,96 @@
+import { useRef, useState } from 'react'
+import { useDroppable } from '@dnd-kit/core'
+import PlayerCard from './PlayerCard'
+import { parseExcelFile } from '../utils/importHelpers'
+
+export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayers, onEditPlayer, onDeletePlayer }) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'pool' })
+  const [query, setQuery] = useState('')
+  const [importError, setImportError] = useState('')
+  const fileInputRef = useRef(null)
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    e.target.value = ''
+    setImportError('')
+    try {
+      const imported = await parseExcelFile(file)
+      onAddPlayers(imported)
+    } catch (err) {
+      setImportError(err.message)
+    }
+  }
+
+  const sorted = [...players].sort((a, b) => {
+    if (!a.birthdate) return 1
+    if (!b.birthdate) return -1
+    return new Date(a.birthdate) - new Date(b.birthdate)
+  })
+
+  const filtered = query.trim()
+    ? sorted.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
+    : sorted
+
+  return (
+    <div className="sticky top-6 flex flex-col max-h-[calc(100vh-6rem)]">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Spelers beschikbaar ({players.length})
+        </h2>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+          title="Importeer spelers uit Excel"
+        >
+          + Excel
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          onChange={handleImport}
+          className="hidden"
+        />
+      </div>
+      {importError && (
+        <p className="mb-2 text-xs text-red-600">{importError}</p>
+      )}
+      <input
+        type="text"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Zoeken..."
+        className="mb-2 w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+      <div
+        ref={setNodeRef}
+        className={`flex-1 overflow-y-auto min-h-64 bg-white rounded-xl border p-3 flex flex-col gap-2 transition-colors ${
+          isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+        }`}
+      >
+        {players.length === 0 ? (
+          <div className="text-center text-gray-400 text-sm py-8">
+            Alle spelers zijn ingedeeld
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center text-gray-400 text-sm py-8">
+            Geen resultaten
+          </div>
+        ) : (
+          filtered.map(player => (
+            <PlayerCard
+              key={player.id}
+              player={player}
+              sourceTeamId={null}
+              isSelected={selectedIds?.has(player.id)}
+              onSelect={onSelect}
+              onEditPlayer={onEditPlayer}
+              onDeletePlayer={onDeletePlayer}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
