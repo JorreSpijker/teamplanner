@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDraggable } from '@dnd-kit/core'
+import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import EditPlayerModal from './EditPlayerModal'
 
@@ -12,13 +12,21 @@ function calculateAge(birthdate) {
 }
 
 export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay, isSelected, onSelect, onEditPlayer, onDeletePlayer }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: `player-${player.id}`,
     data: { playerId: player.id, sourceTeamId: sourceTeamId ?? null },
     disabled: isOverlay,
   })
 
+  const { setNodeRef: setDropRef, isOver: isDropOver } = useDroppable({
+    id: `player-drop-${player.id}`,
+    disabled: !sourceTeamId || isOverlay,
+    data: { destTeamId: sourceTeamId, overPlayerId: player.id },
+  })
+
   const [showEdit, setShowEdit] = useState(false)
+
+  const combinedRef = (node) => { setDragRef(node); setDropRef(node) }
 
   const style = { transform: CSS.Translate.toString(transform) }
   const genderColor = player.gender === 'f'
@@ -38,7 +46,7 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
   return (
     <>
       <div
-        ref={setNodeRef}
+        ref={combinedRef}
         style={style}
         {...listeners}
         {...attributes}
@@ -49,7 +57,7 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
             : genderColor
         } ${
           isDragging ? 'opacity-30' : 'cursor-grab active:cursor-grabbing'
-        } ${isOverlay ? 'shadow-lg cursor-grabbing' : ''}`}
+        } ${isDropOver && !isDragging ? 'border-t-2 border-t-blue-400' : ''} ${isOverlay ? 'shadow-lg cursor-grabbing' : ''}`}
       >
         <span className="font-medium flex-1">{player.name}</span>
         <span className="text-xs opacity-60">{calculateAge(player.birthdate)}j</span>

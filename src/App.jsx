@@ -68,13 +68,34 @@ export default function App() {
     if (!over) return
 
     const { playerId, sourceTeamId } = active.data.current
-    const destId = over.id
+    const overData = over.data.current ?? {}
+    const destTeamId = overData.destTeamId ?? over.id
+    const overPlayerId = overData.overPlayerId ?? null
 
-    if (destId === sourceTeamId) return
-    if (destId === 'pool' && sourceTeamId === null) return
+    if (destTeamId === 'pool' && sourceTeamId === null) return
 
     const isDraggingSelected = selectedIds.has(playerId)
     const toMove = isDraggingSelected ? [...selectedIds] : [playerId]
+
+    if (!isDraggingSelected && sourceTeamId && sourceTeamId === destTeamId && overPlayerId && overPlayerId !== playerId) {
+      const newTeams = state.teams.map(team => {
+        if (team.id !== sourceTeamId) return team
+        const fromIndex = team.playerIds.indexOf(playerId)
+        const toIndex = team.playerIds.indexOf(overPlayerId)
+        if (fromIndex === -1 || toIndex === -1) return team
+
+        const nextIds = [...team.playerIds]
+        nextIds.splice(fromIndex, 1)
+        const insertAt = fromIndex < toIndex ? toIndex - 1 : toIndex
+        nextIds.splice(insertAt, 0, playerId)
+        return { ...team, playerIds: nextIds }
+      })
+
+      persist({ ...state, teams: newTeams })
+      return
+    }
+
+    if (destTeamId === sourceTeamId) return
 
     const sourceTeams = isDraggingSelected
       ? state.teams.reduce((acc, t) => {
@@ -89,7 +110,7 @@ export default function App() {
       if (sourceTeams[team.id]) {
         playerIds = playerIds.filter(id => !sourceTeams[team.id].includes(id))
       }
-      if (team.id === destId) {
+      if (team.id === destTeamId) {
         toMove.forEach(id => { if (!playerIds.includes(id)) playerIds.push(id) })
       }
       return { ...team, playerIds }
