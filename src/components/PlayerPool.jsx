@@ -33,7 +33,7 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
     : sorted
 
   return (
-    <div className="sticky top-[100px] flex flex-col max-h-[calc(100vh-6rem)]">
+    <div className="flex flex-col max-h-[calc(100vh-6rem)]">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
           Spelers beschikbaar ({players.length})

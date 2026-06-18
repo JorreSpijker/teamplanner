@@ -5,11 +5,14 @@ import PlayerPool from './components/PlayerPool'
 import AddTeamModal from './components/AddTeamModal'
 import ImportModal from './components/ImportModal'
 import PlayerCard from './components/PlayerCard'
+import LoginScreen from './components/LoginScreen'
+import PlannerInfo from './components/PlannerInfo'
 import { loadState, saveState } from './utils/storage'
 import { exportDocx } from './utils/exportDocx'
 import { exportXlsx } from './utils/exportXlsx'
 
 export default function App() {
+  const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem('auth') === '1')
   const [state, setState] = useState(() => loadState())
   const [activePlayer, setActivePlayer] = useState(null)
   const [showAddTeam, setShowAddTeam] = useState(false)
@@ -163,11 +166,13 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
+  if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
-          <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
+          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold text-gray-900">Teamindeling</h1>
             <div className="flex gap-2 flex-wrap justify-end">
               <button
@@ -218,7 +223,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="max-w-screen-xl mx-auto px-6 py-6 flex gap-6">
+        <main className="max-w-screen-2xl mx-auto px-6 py-6 flex gap-6">
           <div className="flex-1 min-w-0">
             <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-lg w-fit">
               {['senioren', 'jeugd'].map(tab => (
@@ -241,7 +246,7 @@ export default function App() {
                 Geen teams aangemaakt. Klik op "+ Team toevoegen" om te beginnen.
               </div>
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {visibleTeams.map(team => (
                 <TeamCard
                   key={team.id}
@@ -258,7 +263,10 @@ export default function App() {
           </div>
 
           <div className="w-72 shrink-0">
-            <PlayerPool players={poolPlayers} selectedIds={selectedIds} onSelect={handleSelect} onAddPlayers={handleAddPlayers} onEditPlayer={handleUpdatePlayer} onDeletePlayer={handleDeletePlayer} />
+            <div className="sticky top-[100px]">
+              <PlayerPool players={poolPlayers} selectedIds={selectedIds} onSelect={handleSelect} onAddPlayers={handleAddPlayers} onEditPlayer={handleUpdatePlayer} onDeletePlayer={handleDeletePlayer} />
+              <PlannerInfo />
+            </div>
           </div>
         </main>
       </div>
