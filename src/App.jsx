@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import TeamCard from './components/TeamCard'
 import PlayerPool from './components/PlayerPool'
@@ -21,6 +21,10 @@ export default function App() {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showExportMenu, setShowExportMenu] = useState(false)
   const exportMenuRef = useRef(null)
+  const stateRef = useRef(null)
+  stateRef.current = state
+  const selectedIdsRef = useRef(null)
+  selectedIdsRef.current = selectedIds
 
   useEffect(() => {
     if (!showExportMenu) return
@@ -35,16 +39,25 @@ export default function App() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
 
-  const persist = (newState) => {
+  const persist = useCallback((newState) => {
     setState(newState)
     saveState(newState)
-  }
+  }, [])
 
-  const visibleTeams = state.teams.filter(t => t.type === activeTab)
-  const assignedIds = new Set(state.teams.flatMap(t => t.playerIds))
-  const poolPlayers = state.players.filter(p => !assignedIds.has(p.id))
+  const assignedIds = useMemo(
+    () => new Set(state.teams.flatMap(t => t.playerIds)),
+    [state.teams]
+  )
+  const poolPlayers = useMemo(
+    () => state.players.filter(p => !assignedIds.has(p.id)),
+    [state.players, assignedIds]
+  )
+  const visibleTeams = useMemo(
+    () => state.teams.filter(t => t.type === activeTab),
+    [state.teams, activeTab]
+  )
 
-  const handleSelect = (playerId, shiftKey) => {
+  const handleSelect = useCallback((playerId, shiftKey) => {
     if (!shiftKey) {
       setSelectedIds(prev => {
         if (prev.size === 1 && prev.has(playerId)) return new Set()
@@ -58,14 +71,14 @@ export default function App() {
       else next.add(playerId)
       return next
     })
-  }
+  }, [])
 
-  const handleDragStart = (event) => {
-    const player = state.players.find(p => p.id === event.active.data.current?.playerId)
+  const handleDragStart = useCallback((event) => {
+    const player = stateRef.current.players.find(p => p.id === event.active.data.current?.playerId)
     setActivePlayer(player ?? null)
-  }
+  }, [])
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = useCallback((event) => {
     const { active, over } = event
     setActivePlayer(null)
     if (!over) return
@@ -77,11 +90,13 @@ export default function App() {
 
     if (destTeamId === 'pool' && sourceTeamId === null) return
 
-    const isDraggingSelected = selectedIds.has(playerId)
-    const toMove = isDraggingSelected ? [...selectedIds] : [playerId]
+    const currentState = stateRef.current
+    const currentSelectedIds = selectedIdsRef.current
+    const isDraggingSelected = currentSelectedIds.has(playerId)
+    const toMove = isDraggingSelected ? [...currentSelectedIds] : [playerId]
 
     if (!isDraggingSelected && sourceTeamId && sourceTeamId === destTeamId && overPlayerId && overPlayerId !== playerId) {
-      const newTeams = state.teams.map(team => {
+      const newTeams = currentState.teams.map(team => {
         if (team.id !== sourceTeamId) return team
         const fromIndex = team.playerIds.indexOf(playerId)
         const toIndex = team.playerIds.indexOf(overPlayerId)
@@ -94,21 +109,21 @@ export default function App() {
         return { ...team, playerIds: nextIds }
       })
 
-      persist({ ...state, teams: newTeams })
+      persist({ ...currentState, teams: newTeams })
       return
     }
 
     if (destTeamId === sourceTeamId) return
 
     const sourceTeams = isDraggingSelected
-      ? state.teams.reduce((acc, t) => {
+      ? currentState.teams.reduce((acc, t) => {
           const hits = t.playerIds.filter(id => toMove.includes(id))
           if (hits.length) acc[t.id] = hits
           return acc
         }, {})
       : { [sourceTeamId]: [playerId] }
 
-    const newTeams = state.teams.map(team => {
+    const newTeams = currentState.teams.map(team => {
       let playerIds = [...team.playerIds]
       if (sourceTeams[team.id]) {
         playerIds = playerIds.filter(id => !sourceTeams[team.id].includes(id))
@@ -120,8 +135,8 @@ export default function App() {
     })
 
     setSelectedIds(new Set())
-    persist({ ...state, teams: newTeams })
-  }
+    persist({ ...currentState, teams: newTeams })
+  }, [persist])
 
   const addTeam = (team) => persist({ ...state, teams: [...state.teams, { ...team, type: activeTab }] })
 

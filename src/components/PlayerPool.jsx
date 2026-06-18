@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import PlayerCard from './PlayerCard'
 import { parseExcelFile } from '../utils/importHelpers'
@@ -22,15 +22,21 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
     }
   }
 
-  const sorted = [...players].sort((a, b) => {
-    if (!a.birthdate) return 1
-    if (!b.birthdate) return -1
-    return new Date(a.birthdate) - new Date(b.birthdate)
-  })
+  const sorted = useMemo(() =>
+    [...players].sort((a, b) => {
+      if (!a.birthdate) return 1
+      if (!b.birthdate) return -1
+      return new Date(a.birthdate) - new Date(b.birthdate)
+    }),
+    [players]
+  )
 
-  const filtered = query.trim()
-    ? sorted.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
-    : sorted
+  const filtered = useMemo(() =>
+    query.trim()
+      ? sorted.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
+      : sorted,
+    [sorted, query]
+  )
 
   return (
     <div className="flex flex-col max-h-[calc(100vh-6rem)]">

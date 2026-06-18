@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import PlayerCard from './PlayerCard'
 import AgeBandwidthBar from './AgeBandwidthBar'
@@ -78,7 +79,7 @@ function getTeamStats(team, allPlayers) {
 
 export default function TeamCard({ team, players: allPlayers, selectedIds, onSelect, onRemove, onUpdate, onEditPlayer }) {
   const { setNodeRef, isOver } = useDroppable({ id: team.id })
-  const stats = getTeamStats(team, allPlayers)
+  const stats = useMemo(() => getTeamStats(team, allPlayers), [team, allPlayers])
   const color = team.type === 'jeugd' ? getTeamColor(stats.avgAge) : null
 
   return (
