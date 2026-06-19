@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import TeamCard from './components/TeamCard'
 import PlayerPool from './components/PlayerPool'
 import AddTeamModal from './components/AddTeamModal'
@@ -95,6 +96,19 @@ export default function App() {
     const { active, over } = event
     setActivePlayer(null)
     if (!over) return
+
+    if (active.data.current?.type === 'team') {
+      const activeTeamId = active.data.current.teamId
+      const overTeamId = over.data.current?.teamId ?? over.data.current?.destTeamId ?? null
+      if (!overTeamId || activeTeamId === overTeamId) return
+      const currentState = stateRef.current
+      const oldIndex = currentState.teams.findIndex(t => t.id === activeTeamId)
+      const newIndex = currentState.teams.findIndex(t => t.id === overTeamId)
+      if (oldIndex !== -1 && newIndex !== -1) {
+        persist({ ...currentState, teams: arrayMove(currentState.teams, oldIndex, newIndex) })
+      }
+      return
+    }
 
     const { playerId, sourceTeamId } = active.data.current
     const overData = over.data.current ?? {}
@@ -334,6 +348,7 @@ export default function App() {
               </button>
             </div>
 
+            <div key={activeTab} className="animate-content-in">
             {visibleTeams.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 rounded-xl border border-dashed border-gray-200 text-gray-400 gap-2">
                 <span className="text-sm">
@@ -347,6 +362,7 @@ export default function App() {
                 </button>
               </div>
             ) : (
+              <SortableContext items={visibleTeams.map(t => t.id)} strategy={rectSortingStrategy}>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-5">
                 {visibleTeams.map(team => (
                   <TeamCard
@@ -361,7 +377,9 @@ export default function App() {
                   />
                 ))}
               </div>
+              </SortableContext>
             )}
+            </div>
           </div>
         </main>
       </div>

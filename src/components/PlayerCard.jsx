@@ -28,7 +28,7 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
 
   const combinedRef = (node) => { setDragRef(node); setDropRef(node) }
 
-  const style = { transform: CSS.Translate.toString(transform) }
+  const style = isOverlay ? {} : { transform: CSS.Translate.toString(transform) }
   const genderColor = player.gender === 'f'
     ? 'bg-pink-50 border-pink-200 text-pink-900'
     : 'bg-blue-50 border-blue-200 text-blue-900'
@@ -57,7 +57,7 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
             : genderColor
         } ${
           isDragging ? 'opacity-30' : 'cursor-grab active:cursor-grabbing'
-        } ${isDropOver && !isDragging ? 'border-t-2 border-t-blue-400' : ''} ${isOverlay ? 'shadow-lg cursor-grabbing' : ''}`}
+        } ${isDropOver && !isDragging ? 'border-t-2 border-t-blue-400' : ''} ${isOverlay ? 'shadow-xl cursor-grabbing rotate-1 scale-[1.03] ring-1 ring-black/[0.06]' : ''}`}
       >
         <span className="font-medium flex-1">{player.name}</span>
         <span className={`text-xs tabular-nums ${isSelected ? 'text-yellow-800' : player.gender === 'f' ? 'text-pink-700' : 'text-blue-700'}`}>

@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import PlayerCard from './PlayerCard'
 import AgeBandwidthBar from './AgeBandwidthBar'
 
@@ -78,12 +80,41 @@ function getTeamStats(team, allPlayers) {
 }
 
 export default function TeamCard({ team, players: allPlayers, selectedIds, onSelect, onRemove, onUpdate, onEditPlayer }) {
-  const { setNodeRef, isOver } = useDroppable({ id: team.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: team.id, data: { type: 'team', teamId: team.id } })
+
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `${team.id}-drop`,
+    data: { destTeamId: team.id },
+  })
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : undefined,
+  }
   const stats = useMemo(() => getTeamStats(team, allPlayers), [team, allPlayers])
   const color = team.type === 'jeugd' ? getTeamColor(stats.avgAge) : null
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(team.name)
+  const [badgePop, setBadgePop] = useState(false)
+  const prevValidRef = useRef(stats.valid)
+
+  useEffect(() => {
+    if (!prevValidRef.current && stats.valid) {
+      setBadgePop(true)
+      const id = setTimeout(() => setBadgePop(false), 500)
+      return () => clearTimeout(id)
+    }
+    prevValidRef.current = stats.valid
+  }, [stats.valid])
 
   useEffect(() => {
     if (!confirmRemove) return
@@ -108,12 +139,28 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
   }
 
   return (
-    <div className={`bg-white rounded-xl border overflow-hidden transition-colors ${
-      isOver ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
-    }`}>
+    <div
+      ref={setSortableRef}
+      style={sortableStyle}
+      className={`bg-white rounded-xl border overflow-hidden transition-colors ${
+        isOver ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
+      }`}
+    >
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-2">
+        <button
+          {...listeners}
+          {...attributes}
+          aria-label="Sleep om team te verplaatsen"
+          className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0 touch-none"
+        >
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="currentColor" aria-hidden="true">
+            <circle cx="3" cy="3" r="1.5" /><circle cx="9" cy="3" r="1.5" />
+            <circle cx="3" cy="10" r="1.5" /><circle cx="9" cy="10" r="1.5" />
+            <circle cx="3" cy="17" r="1.5" /><circle cx="9" cy="17" r="1.5" />
+          </svg>
+        </button>
         <div className="min-w-0 flex-1">
           {editingName ? (
             <input
@@ -139,9 +186,9 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-block ${
             stats.valid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-          }`}>
+          } ${badgePop ? 'animate-badge-pop' : ''}`}>
             {stats.validMsg}
           </span>
 
@@ -252,7 +299,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
 
       {/* Drop zone */}
       <div
-        ref={setNodeRef}
+        ref={setDropRef}
         className={`p-3 flex flex-col gap-2 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
       >
         {stats.players.length === 0 ? (

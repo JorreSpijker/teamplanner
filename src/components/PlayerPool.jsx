@@ -76,8 +76,11 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
         }`}
       >
         {players.length === 0 ? (
-          <div className="text-center text-gray-500 text-sm py-8">
-            Alle spelers zijn ingedeeld
+          <div className="flex flex-col items-center gap-2 py-8">
+            <svg className="w-7 h-7 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            <span className="text-sm font-medium text-green-700">Alle spelers ingedeeld</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center text-gray-500 text-sm py-8">
