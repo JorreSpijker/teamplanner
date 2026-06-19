@@ -66,8 +66,8 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
           <button
             onPointerDown={e => e.stopPropagation()}
             onClick={handleEditClick}
-            className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-xs leading-none ml-1 transition-opacity"
-            title="Aanpassen"
+            className="opacity-0 group-hover:opacity-60 hover:!opacity-100 focus:opacity-100 text-xs leading-none ml-1 transition-opacity rounded"
+            aria-label={`Bewerk ${player.name}`}
           >
             ✎
           </button>

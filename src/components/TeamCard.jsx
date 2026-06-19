@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import PlayerCard from './PlayerCard'
 import AgeBandwidthBar from './AgeBandwidthBar'
@@ -81,6 +81,13 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
   const { setNodeRef, isOver } = useDroppable({ id: team.id })
   const stats = useMemo(() => getTeamStats(team, allPlayers), [team, allPlayers])
   const color = team.type === 'jeugd' ? getTeamColor(stats.avgAge) : null
+  const [confirmRemove, setConfirmRemove] = useState(false)
+
+  useEffect(() => {
+    if (!confirmRemove) return
+    const t = setTimeout(() => setConfirmRemove(false), 4000)
+    return () => clearTimeout(t)
+  }, [confirmRemove])
 
   return (
     <div className={`bg-white rounded-xl border overflow-hidden transition-colors ${
@@ -95,15 +102,34 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
             {stats.validMsg}
           </span>
         </div>
-        <button
-          onClick={onRemove}
-          className="text-gray-400 hover:text-red-500 text-xl leading-none shrink-0 px-1"
-        >
-          ×
-        </button>
+        {confirmRemove ? (
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs text-gray-500">Verwijderen?</span>
+            <button
+              onClick={onRemove}
+              className="text-xs font-semibold text-red-600 hover:text-red-800 px-1 py-0.5"
+            >
+              Ja
+            </button>
+            <button
+              onClick={() => setConfirmRemove(false)}
+              className="text-xs text-gray-400 hover:text-gray-600 px-1 py-0.5"
+            >
+              Nee
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmRemove(true)}
+            aria-label={`Verwijder ${team.name}`}
+            className="text-gray-400 hover:text-red-500 text-xl leading-none shrink-0 px-1"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
       </div>
 
-      <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
+      <div className="px-4 py-2.5 border-b border-gray-100 bg-white">
         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
           <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200">
             <span className="font-medium text-gray-500">Cat</span>
@@ -118,9 +144,9 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
             </select>
           </label>
 
-          {stats.avgAge !== null && (
+          {team.type === 'jeugd' && stats.avgAge !== null && (
             <span className="inline-flex items-center px-2 py-1 rounded-md bg-white border border-gray-200">
-              <span className="font-medium text-gray-500 mr-1">Gem. leeftijd</span>
+              <span className="font-medium text-gray-500 mr-1">Gem.</span>
               <span className="font-semibold text-gray-800">{stats.avgAge}j</span>
             </span>
           )}
@@ -148,13 +174,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
             </span>
           )}
 
-          {team.type === 'jeugd' && team.category === 'B' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-md bg-white border border-gray-200 font-medium text-gray-700">
-              {team.format === '4tal' ? '4-tal' : '8-tal'}
-            </span>
-          )}
-
-          {stats.players.length > 0 && (
+          {team.type !== 'jeugd' && stats.players.length > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-gray-200">
               <span className="text-blue-600 font-semibold">♂ {stats.males}</span>
               <span className="text-gray-300">/</span>
@@ -162,10 +182,17 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
             </span>
           )}
 
-          {team.category === 'B' && color && (
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium border border-white/30 ${color.bg} ${color.text}`}>
-              {color.name}
-              <span className="font-normal opacity-80">· {color.specs}</span>
+          {team.type === 'jeugd' && team.category === 'B' && color && (
+            <span className="relative inline-flex">
+              <span
+                tabIndex={0}
+                className={`group inline-flex items-center px-2 py-1 rounded-md font-medium cursor-help ${color.bg} ${color.text}`}
+              >
+                {color.name}
+                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-max -translate-x-1/2 rounded-md bg-gray-900 px-2 py-1 text-[11px] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+                  {color.specs}
+                </span>
+              </span>
             </span>
           )}
         </div>
@@ -183,7 +210,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
         className={`p-3 min-h-20 flex flex-col gap-2 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
       >
         {stats.players.length === 0 ? (
-          <div className="text-center text-gray-400 text-xs py-4">
+          <div className="text-center text-gray-500 text-xs py-4">
             Sleep spelers hiernaartoe
           </div>
         ) : (

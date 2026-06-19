@@ -1,6 +1,6 @@
 export default function PlannerInfo() {
   return (
-    <div className="mt-4 bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
       <p className="text-xs font-semibold text-gray-700 mb-3">Aan de slag</p>
       <ol className="flex flex-col gap-3">
         <li className="flex gap-3 items-start">

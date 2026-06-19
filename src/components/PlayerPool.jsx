@@ -41,9 +41,9 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
   return (
     <div className="flex flex-col max-h-[calc(100vh-6rem)]">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Spelers beschikbaar ({players.length})
-        </h2>
+        <span className="text-sm font-semibold text-gray-700">
+          Beschikbaar <span className="font-normal text-gray-400">{players.length}</span>
+        </span>
         <button
           onClick={() => fileInputRef.current?.click()}
           className="text-xs text-blue-600 hover:text-blue-800 font-medium"
@@ -76,11 +76,11 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
         }`}
       >
         {players.length === 0 ? (
-          <div className="text-center text-gray-400 text-sm py-8">
+          <div className="text-center text-gray-500 text-sm py-8">
             Alle spelers zijn ingedeeld
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center text-gray-400 text-sm py-8">
+          <div className="text-center text-gray-500 text-sm py-8">
             Geen resultaten
           </div>
         ) : (

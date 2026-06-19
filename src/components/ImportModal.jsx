@@ -6,6 +6,7 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(null)
   const [pendingPlayers, setPendingPlayers] = useState(null)
+  const [pendingJSON, setPendingJSON] = useState(null)
 
   const handleExcelFile = async (e) => {
     const file = e.target.files[0]
@@ -28,8 +29,7 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
       try {
         const data = JSON.parse(ev.target.result)
         if (!data.players || !data.teams) throw new Error('Ongeldig JSON formaat. Verwacht: { players, teams }')
-        onImportJSON(data)
-        onClose()
+        setPendingJSON(data)
       } catch (err) {
         setError(err.message)
       }
@@ -47,6 +47,13 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
   const confirmAddPlayers = () => {
     if (pendingPlayers) {
       onAddPlayers(pendingPlayers)
+      onClose()
+    }
+  }
+
+  const confirmJSON = () => {
+    if (pendingJSON) {
+      onImportJSON(pendingJSON)
       onClose()
     }
   }
@@ -82,7 +89,7 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={handleExcelFile}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             {preview && (
@@ -108,7 +115,10 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
                     </tbody>
                   </table>
                 </div>
-                <div className="flex justify-end gap-3 mt-4">
+                <p className="text-xs text-amber-700 mt-3">
+                  Let op: &ldquo;Nieuwe indeling starten&rdquo; wist je huidige spelers en teams.
+                </p>
+                <div className="flex justify-end gap-3 mt-2">
                   <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Annuleren</button>
                   <button
                     onClick={confirmAddPlayers}
@@ -118,7 +128,7 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
                   </button>
                   <button
                     onClick={confirmNewPlan}
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                    className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
                   >
                     Nieuwe indeling starten
                   </button>
@@ -137,9 +147,33 @@ export default function ImportModal({ onNewPlan, onAddPlayers, onImportJSON, onC
               type="file"
               accept=".json"
               onChange={handleJSONFile}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
+              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
             />
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {pendingJSON && (
+              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-sm font-medium text-amber-900 mb-0.5">
+                  Gevonden: {pendingJSON.players.length} spelers, {pendingJSON.teams.length} teams
+                </p>
+                <p className="text-xs text-amber-700 mb-3">
+                  Dit vervangt je huidige indeling volledig.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setPendingJSON(null)}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Annuleren
+                  </button>
+                  <button
+                    onClick={confirmJSON}
+                    className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Importeren
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

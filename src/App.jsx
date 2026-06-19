@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import TeamCard from './components/TeamCard'
 import PlayerPool from './components/PlayerPool'
 import AddTeamModal from './components/AddTeamModal'
@@ -20,7 +20,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('senioren')
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
   const exportMenuRef = useRef(null)
+  const infoMenuRef = useRef(null)
   const stateRef = useRef(null)
   stateRef.current = state
   const selectedIdsRef = useRef(null)
@@ -35,8 +37,18 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handler)
   }, [showExportMenu])
 
+  useEffect(() => {
+    if (!showInfo) return
+    const handler = (e) => {
+      if (!infoMenuRef.current?.contains(e.target)) setShowInfo(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showInfo])
+
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
   )
 
   const persist = useCallback((newState) => {
@@ -189,7 +201,28 @@ export default function App() {
         <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
           <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold text-gray-900">Teamindeling</h1>
-            <div className="flex gap-2 flex-wrap justify-end">
+            <div className="flex gap-2 flex-wrap justify-end items-center">
+              <div className="relative" ref={infoMenuRef}>
+                <button
+                  onClick={() => setShowInfo(v => !v)}
+                  aria-label="Hulp en instructies"
+                  aria-expanded={showInfo}
+                  aria-controls="help-panel"
+                  className={`w-11 h-11 text-sm rounded-full border font-semibold flex items-center justify-center transition-colors ${
+                    showInfo
+                      ? 'bg-gray-900 border-gray-900 text-white'
+                      : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                  }`}
+                >
+                  <span aria-hidden="true">?</span>
+                </button>
+                {showInfo && (
+                  <div id="help-panel" className="absolute right-0 mt-2 w-80 z-20 shadow-lg rounded-xl">
+                    <PlannerInfo />
+                  </div>
+                )}
+              </div>
+              <div className="w-px h-5 bg-gray-200" />
               <button
                 onClick={() => setShowImport(true)}
                 className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700"
@@ -206,7 +239,7 @@ export default function App() {
                 <button
                   onClick={() => setShowExportMenu(v => !v)}
                   disabled={state.teams.length === 0 && state.players.length === 0}
-                  className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   Exporteren
                   <span className="text-xs">▾</span>
@@ -238,9 +271,9 @@ export default function App() {
           </div>
         </header>
 
-        <main className="max-w-screen-2xl mx-auto px-6 py-6 flex gap-6">
+        <main className="max-w-screen-2xl mx-auto px-6 py-8 flex gap-8">
           <div className="flex-1 min-w-0">
-            <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-lg w-fit">
+            <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
               {['senioren', 'jeugd'].map(tab => (
                 <button
                   key={tab}
@@ -253,12 +286,12 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
-              Teams ({visibleTeams.length})
-            </h2>
+            <p className="text-sm font-semibold text-gray-700 mb-3">
+              Teams <span className="font-normal text-gray-400">{visibleTeams.length}</span>
+            </p>
             {visibleTeams.length === 0 && (
-              <div className="text-center py-16 text-gray-400 bg-white rounded-xl border border-dashed border-gray-300 text-sm">
-                Geen teams aangemaakt. Klik op "+ Team toevoegen" om te beginnen.
+              <div className="text-center py-16 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300 text-sm">
+                Geen teams aangemaakt. Klik op &ldquo;+ Team toevoegen&rdquo; om te beginnen.
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -280,7 +313,6 @@ export default function App() {
           <div className="w-72 shrink-0">
             <div className="sticky top-[100px]">
               <PlayerPool players={poolPlayers} selectedIds={selectedIds} onSelect={handleSelect} onAddPlayers={handleAddPlayers} onEditPlayer={handleUpdatePlayer} onDeletePlayer={handleDeletePlayer} />
-              <PlannerInfo />
             </div>
           </div>
         </main>
