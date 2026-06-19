@@ -82,6 +82,8 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
   const stats = useMemo(() => getTeamStats(team, allPlayers), [team, allPlayers])
   const color = team.type === 'jeugd' ? getTeamColor(stats.avgAge) : null
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(team.name)
 
   useEffect(() => {
     if (!confirmRemove) return
@@ -89,46 +91,89 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
     return () => clearTimeout(t)
   }, [confirmRemove])
 
+  useEffect(() => {
+    if (!editingName) setNameValue(team.name)
+  }, [team.name, editingName])
+
+  const saveName = () => {
+    const trimmed = nameValue.trim()
+    if (trimmed && trimmed !== team.name) onUpdate({ name: trimmed })
+    else setNameValue(team.name)
+    setEditingName(false)
+  }
+
+  const cancelName = () => {
+    setNameValue(team.name)
+    setEditingName(false)
+  }
+
   return (
     <div className={`bg-white rounded-xl border overflow-hidden transition-colors ${
       isOver ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
     }`}>
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="font-bold text-gray-900 text-sm">{team.name}</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
+
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {editingName ? (
+            <input
+              value={nameValue}
+              onChange={e => setNameValue(e.target.value)}
+              onBlur={saveName}
+              onKeyDown={e => {
+                if (e.key === 'Enter') saveName()
+                if (e.key === 'Escape') cancelName()
+              }}
+              className="font-bold text-gray-900 text-base bg-white rounded px-1.5 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 border border-blue-300"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => setEditingName(true)}
+              title="Klik om naam te wijzigen"
+              className="font-bold text-gray-900 text-base text-left truncate hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded w-full"
+            >
+              {team.name}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
             stats.valid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
           }`}>
             {stats.validMsg}
           </span>
+
+          {confirmRemove ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Verwijderen?</span>
+              <button
+                onClick={onRemove}
+                className="text-xs font-semibold text-red-600 hover:text-red-800 px-1 py-0.5"
+              >
+                Ja
+              </button>
+              <button
+                onClick={() => setConfirmRemove(false)}
+                className="text-xs text-gray-400 hover:text-gray-600 px-1 py-0.5"
+              >
+                Nee
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmRemove(true)}
+              aria-label={`Verwijder ${team.name}`}
+              className="text-gray-400 hover:text-red-500 text-xl leading-none px-1"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
         </div>
-        {confirmRemove ? (
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-xs text-gray-500">Verwijderen?</span>
-            <button
-              onClick={onRemove}
-              className="text-xs font-semibold text-red-600 hover:text-red-800 px-1 py-0.5"
-            >
-              Ja
-            </button>
-            <button
-              onClick={() => setConfirmRemove(false)}
-              className="text-xs text-gray-400 hover:text-gray-600 px-1 py-0.5"
-            >
-              Nee
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmRemove(true)}
-            aria-label={`Verwijder ${team.name}`}
-            className="text-gray-400 hover:text-red-500 text-xl leading-none shrink-0 px-1"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-        )}
       </div>
 
+      {/* Stats band */}
       <div className="px-4 py-2.5 border-b border-gray-100 bg-white">
         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
           <label className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200">
@@ -205,13 +250,18 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
         />
       )}
 
+      {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`p-3 min-h-20 flex flex-col gap-2 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
+        className={`p-3 flex flex-col gap-2 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
       >
         {stats.players.length === 0 ? (
-          <div className="text-center text-gray-500 text-xs py-4">
-            Sleep spelers hiernaartoe
+          <div className={`flex items-center justify-center rounded-lg border-2 border-dashed min-h-[88px] transition-colors ${
+            isOver
+              ? 'border-blue-400 bg-blue-50 text-blue-500'
+              : 'border-gray-200 text-gray-400'
+          }`}>
+            <span className="text-xs select-none">Sleep spelers hiernaartoe</span>
           </div>
         ) : (
           stats.players.map(player => (

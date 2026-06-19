@@ -39,7 +39,7 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
   )
 
   return (
-    <div className="flex flex-col max-h-[calc(100vh-6rem)]">
+    <div className="flex flex-col max-h-[calc(100vh-10rem)]">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-semibold text-gray-700">
           Beschikbaar <span className="font-normal text-gray-400">{players.length}</span>

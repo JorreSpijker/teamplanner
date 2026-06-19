@@ -7,6 +7,7 @@ import ImportModal from './components/ImportModal'
 import PlayerCard from './components/PlayerCard'
 import LoginScreen from './components/LoginScreen'
 import PlannerInfo from './components/PlannerInfo'
+import CategoryInfo from './components/CategoryInfo'
 import { loadState, saveState } from './utils/storage'
 import { exportDocx } from './utils/exportDocx'
 import { exportXlsx } from './utils/exportXlsx'
@@ -16,8 +17,8 @@ export default function App() {
   const [state, setState] = useState(() => loadState())
   const [activePlayer, setActivePlayer] = useState(null)
   const [showAddTeam, setShowAddTeam] = useState(false)
+  const [activeTab, setActiveTab] = useState('jeugd')
   const [showImport, setShowImport] = useState(false)
-  const [activeTab, setActiveTab] = useState('senioren')
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -198,8 +199,9 @@ export default function App() {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-white">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
-          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
+
+        <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 shadow-sm">
+          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4 px-6">
             <h1 className="text-lg font-bold text-gray-900">Teamindeling</h1>
             <div className="flex gap-2 flex-wrap justify-end items-center">
               <div className="relative" ref={infoMenuRef}>
@@ -229,12 +231,6 @@ export default function App() {
               >
                 Nieuwe teamindeling
               </button>
-              <button
-                onClick={() => setShowAddTeam(true)}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-              >
-                + Team toevoegen
-              </button>
               <div className="relative" ref={exportMenuRef}>
                 <button
                   onClick={() => setShowExportMenu(v => !v)}
@@ -242,7 +238,7 @@ export default function App() {
                   className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                 >
                   Exporteren
-                  <span className="text-xs">▾</span>
+                  <span className="text-xs" aria-hidden="true">▾</span>
                 </button>
                 {showExportMenu && (
                   <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
@@ -271,49 +267,101 @@ export default function App() {
           </div>
         </header>
 
-        <main className="max-w-screen-2xl mx-auto px-6 py-8 flex gap-8">
-          <div className="flex-1 min-w-0">
-            <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-              {['senioren', 'jeugd'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 text-sm rounded-md font-medium capitalize transition-colors ${
-                    activeTab === tab ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">
-              Teams <span className="font-normal text-gray-400">{visibleTeams.length}</span>
-            </p>
-            {visibleTeams.length === 0 && (
-              <div className="text-center py-16 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300 text-sm">
-                Geen teams aangemaakt. Klik op &ldquo;+ Team toevoegen&rdquo; om te beginnen.
+        {/* Summary strip */}
+        <div className="border-b border-gray-200 bg-gray-50 px-6 py-3 sticky top-[77px] z-10">
+          <div className="max-w-screen-2xl mx-auto flex items-center gap-5 text-sm px-6">
+            <span className="text-gray-500">
+              <span className="font-semibold text-gray-900 tabular-nums">{state.players.length}</span> spelers
+            </span>
+            <span className="text-gray-300" aria-hidden="true">·</span>
+            <span className={poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-500'}>
+              <span className={`font-semibold tabular-nums ${poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-900'}`}>
+                {poolPlayers.length}
+              </span> onverdeeld
+            </span>
+            <span className="text-gray-300" aria-hidden="true">·</span>
+            <span className="text-gray-500">
+              <span className="font-semibold text-gray-900 tabular-nums">{state.teams.length}</span> teams
+            </span>
+          </div>
+        </div>
+
+        <main className="max-w-screen-2xl mx-auto px-6 pt-6 pb-14 flex gap-6">
+          {/* Left: Player pool + category info */}
+          <div className="w-72 shrink-0 flex flex-col gap-4">
+            <div className="sticky top-[146px]">
+              <PlayerPool
+                players={poolPlayers}
+                selectedIds={selectedIds}
+                onSelect={handleSelect}
+                onAddPlayers={handleAddPlayers}
+                onEditPlayer={handleUpdatePlayer}
+                onDeletePlayer={handleDeletePlayer}
+              />
+              <div className="mt-3">
+                <CategoryInfo />
               </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {visibleTeams.map(team => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  players={state.players}
-                  selectedIds={selectedIds}
-                  onSelect={handleSelect}
-                  onRemove={() => removeTeam(team.id)}
-                  onUpdate={(updates) => updateTeam(team.id, updates)}
-                  onEditPlayer={handleUpdatePlayer}
-                />
-              ))}
             </div>
           </div>
 
-          <div className="w-72 shrink-0">
-            <div className="sticky top-[100px]">
-              <PlayerPool players={poolPlayers} selectedIds={selectedIds} onSelect={handleSelect} onAddPlayers={handleAddPlayers} onEditPlayer={handleUpdatePlayer} onDeletePlayer={handleDeletePlayer} />
+          {/* Right: Teams */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                {['jeugd', 'senioren'].map(tab => {
+                  const count = state.teams.filter(t => t.type === tab).length
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${
+                        activeTab === tab ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {count > 0 && (
+                        <span className="ml-1.5 tabular-nums text-xs font-normal text-gray-400">{count}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              <button
+                onClick={() => setShowAddTeam(true)}
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                + Team
+              </button>
             </div>
+
+            {visibleTeams.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-14 rounded-xl border border-dashed border-gray-200 text-gray-400 gap-2">
+                <span className="text-sm">
+                  Nog geen {activeTab === 'senioren' ? 'senioren' : 'jeugd'} teams
+                </span>
+                <button
+                  onClick={() => setShowAddTeam(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  + Team toevoegen
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-5">
+                {visibleTeams.map(team => (
+                  <TeamCard
+                    key={team.id}
+                    team={team}
+                    players={state.players}
+                    selectedIds={selectedIds}
+                    onSelect={handleSelect}
+                    onRemove={() => removeTeam(team.id)}
+                    onUpdate={(updates) => updateTeam(team.id, updates)}
+                    onEditPlayer={handleUpdatePlayer}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
