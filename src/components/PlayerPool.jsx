@@ -67,7 +67,7 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Zoeken..."
-        className="mb-2 w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="mb-2 w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <div
         ref={setNodeRef}

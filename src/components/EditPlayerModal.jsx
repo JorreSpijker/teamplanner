@@ -33,7 +33,7 @@ export default function EditPlayerModal({ player, onSave, onDelete, onClose }) {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
           </label>
@@ -44,7 +44,7 @@ export default function EditPlayerModal({ player, onSave, onDelete, onClose }) {
               type="date"
               value={birthdate}
               onChange={e => setBirthdate(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </label>
 
@@ -53,7 +53,7 @@ export default function EditPlayerModal({ player, onSave, onDelete, onClose }) {
             <select
               value={gender}
               onChange={e => setGender(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="m">♂ Man</option>
               <option value="f">♀ Vrouw</option>

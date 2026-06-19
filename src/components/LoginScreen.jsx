@@ -19,7 +19,7 @@ export default function LoginScreen({ onLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-8 w-full max-w-sm">
         <h1 className="text-xl font-bold text-gray-900 mb-6">Teamindeling</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

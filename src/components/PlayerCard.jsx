@@ -60,8 +60,12 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
         } ${isDropOver && !isDragging ? 'border-t-2 border-t-blue-400' : ''} ${isOverlay ? 'shadow-lg cursor-grabbing' : ''}`}
       >
         <span className="font-medium flex-1">{player.name}</span>
-        <span className="text-xs opacity-60">{calculateAge(player.birthdate)}j</span>
-        <span className="text-xs opacity-50">{player.gender === 'f' ? '♀' : '♂'}</span>
+        <span className={`text-xs tabular-nums ${isSelected ? 'text-yellow-800' : player.gender === 'f' ? 'text-pink-700' : 'text-blue-700'}`}>
+          {calculateAge(player.birthdate)}j
+        </span>
+        <span className={`text-xs ${isSelected ? 'text-yellow-700' : player.gender === 'f' ? 'text-pink-700' : 'text-blue-600'}`}>
+          {player.gender === 'f' ? '♀' : '♂'}
+        </span>
         {onEditPlayer && (
           <button
             onPointerDown={e => e.stopPropagation()}

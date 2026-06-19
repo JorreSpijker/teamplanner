@@ -147,7 +147,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
           {team.type === 'jeugd' && stats.avgAge !== null && (
             <span className="inline-flex items-center px-2 py-1 rounded-md bg-white border border-gray-200">
               <span className="font-medium text-gray-500 mr-1">Gem.</span>
-              <span className="font-semibold text-gray-800">{stats.avgAge}j</span>
+              <span className="font-semibold text-gray-800 tabular-nums">{stats.avgAge}j</span>
             </span>
           )}
 
@@ -164,7 +164,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
                 className="group inline-flex items-center px-2 py-1 rounded-md bg-white border border-gray-200 cursor-help"
               >
                 <span className="font-medium text-gray-500 mr-1">Bandbreedte</span>
-                <span className="font-semibold text-gray-800">
+                <span className="font-semibold text-gray-800 tabular-nums">
                   {(Math.max(...stats.exactAges) - Math.min(...stats.exactAges)).toFixed(1)}j
                 </span>
                 <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 w-max -translate-x-1/2 rounded-md bg-gray-900 px-2 py-1 text-[11px] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
@@ -176,9 +176,9 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
 
           {team.type !== 'jeugd' && stats.players.length > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white border border-gray-200">
-              <span className="text-blue-600 font-semibold">♂ {stats.males}</span>
+              <span className="text-blue-600 font-semibold tabular-nums">♂ {stats.males}</span>
               <span className="text-gray-300">/</span>
-              <span className="text-pink-600 font-semibold">♀ {stats.females}</span>
+              <span className="text-pink-600 font-semibold tabular-nums">♀ {stats.females}</span>
             </span>
           )}
 

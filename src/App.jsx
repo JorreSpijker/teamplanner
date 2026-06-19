@@ -197,7 +197,7 @@ export default function App() {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
           <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold text-gray-900">Teamindeling</h1>
