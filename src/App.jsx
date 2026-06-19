@@ -29,6 +29,7 @@ export default function App() {
   stateRef.current = state
   const selectedIdsRef = useRef(null)
   selectedIdsRef.current = selectedIds
+  const stickyRef = useRef(null)
 
   useEffect(() => {
     if (!showExportMenu) return
@@ -47,6 +48,16 @@ export default function App() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showInfo])
+
+  useEffect(() => {
+    const el = stickyRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty('--sticky-top', `${Math.round(entry.contentRect.height)}px`)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -214,96 +225,105 @@ export default function App() {
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-white">
 
-        <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20 shadow-sm">
-          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4 px-6">
-            <h1 className="text-lg font-bold text-gray-900">Teamindeling</h1>
-            <div className="flex gap-2 flex-wrap justify-end items-center">
-              <div className="relative" ref={infoMenuRef}>
+        {/* Sticky shell — header + summary strip measured as one unit */}
+        <div ref={stickyRef} className="sticky top-0 z-20 shadow-sm">
+          <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+            <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-3 sm:gap-4 sm:px-6">
+              <h1 className="text-lg font-bold text-gray-900 shrink-0">Teamindeling</h1>
+              <div className="flex gap-2 flex-wrap justify-end items-center">
+                <div className="relative" ref={infoMenuRef}>
+                  <button
+                    onClick={() => setShowInfo(v => !v)}
+                    aria-label="Hulp en instructies"
+                    aria-expanded={showInfo}
+                    aria-controls="help-panel"
+                    className={`w-11 h-11 text-sm rounded-full border font-semibold flex items-center justify-center transition-colors ${
+                      showInfo
+                        ? 'bg-gray-900 border-gray-900 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                    }`}
+                  >
+                    <span aria-hidden="true">?</span>
+                  </button>
+                  {showInfo && (
+                    <div id="help-panel" className="absolute right-0 mt-2 w-72 sm:w-80 z-20 shadow-lg rounded-xl">
+                      <PlannerInfo />
+                    </div>
+                  )}
+                </div>
+                <div className="w-px h-5 bg-gray-200" />
                 <button
-                  onClick={() => setShowInfo(v => !v)}
-                  aria-label="Hulp en instructies"
-                  aria-expanded={showInfo}
-                  aria-controls="help-panel"
-                  className={`w-11 h-11 text-sm rounded-full border font-semibold flex items-center justify-center transition-colors ${
-                    showInfo
-                      ? 'bg-gray-900 border-gray-900 text-white'
-                      : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700'
-                  }`}
+                  onClick={() => setShowImport(true)}
+                  className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700"
                 >
-                  <span aria-hidden="true">?</span>
+                  <span className="hidden sm:inline">Nieuwe teamindeling</span>
+                  <span className="sm:hidden">Importeren</span>
                 </button>
-                {showInfo && (
-                  <div id="help-panel" className="absolute right-0 mt-2 w-80 z-20 shadow-lg rounded-xl">
-                    <PlannerInfo />
-                  </div>
-                )}
-              </div>
-              <div className="w-px h-5 bg-gray-200" />
-              <button
-                onClick={() => setShowImport(true)}
-                className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700"
-              >
-                Nieuwe teamindeling
-              </button>
-              <div className="relative" ref={exportMenuRef}>
-                <button
-                  onClick={() => setShowExportMenu(v => !v)}
-                  disabled={state.teams.length === 0 && state.players.length === 0}
-                  className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-                >
-                  Exporteren
-                  <span className="text-xs" aria-hidden="true">▾</span>
-                </button>
-                {showExportMenu && (
-                  <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                    <button
-                      onClick={() => { exportXlsx(state); setShowExportMenu(false) }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Exporteer Excel
-                    </button>
-                    <button
-                      onClick={() => { exportDocx(state); setShowExportMenu(false) }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Exporteer DOCX
-                    </button>
-                    <button
-                      onClick={() => { exportJSON(); setShowExportMenu(false) }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Exporteer JSON
-                    </button>
-                  </div>
-                )}
+                <div className="relative" ref={exportMenuRef}>
+                  <button
+                    onClick={() => setShowExportMenu(v => !v)}
+                    disabled={state.teams.length === 0 && state.players.length === 0}
+                    aria-haspopup="menu"
+                    aria-expanded={showExportMenu}
+                    className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    Exporteren
+                    <span className="text-xs" aria-hidden="true">▾</span>
+                  </button>
+                  {showExportMenu && (
+                    <div role="menu" aria-label="Exporteer als" className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                      <button
+                        role="menuitem"
+                        onClick={() => { exportXlsx(state); setShowExportMenu(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Exporteer Excel
+                      </button>
+                      <button
+                        role="menuitem"
+                        onClick={() => { exportDocx(state); setShowExportMenu(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Exporteer DOCX
+                      </button>
+                      <button
+                        role="menuitem"
+                        onClick={() => { exportJSON(); setShowExportMenu(false) }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Exporteer JSON
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Summary strip */}
-        <div className="border-b border-gray-200 bg-gray-50 px-6 py-3 sticky top-[77px] z-10">
-          <div className="max-w-screen-2xl mx-auto flex items-center gap-5 text-sm px-6">
-            <span className="text-gray-500">
-              <span className="font-semibold text-gray-900 tabular-nums">{state.players.length}</span> spelers
-            </span>
-            <span className="text-gray-300" aria-hidden="true">·</span>
-            <span className={poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-500'}>
-              <span className={`font-semibold tabular-nums ${poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-900'}`}>
-                {poolPlayers.length}
-              </span> onverdeeld
-            </span>
-            <span className="text-gray-300" aria-hidden="true">·</span>
-            <span className="text-gray-500">
-              <span className="font-semibold text-gray-900 tabular-nums">{state.teams.length}</span> teams
-            </span>
+          {/* Summary strip */}
+          <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3">
+            <div className="max-w-screen-2xl mx-auto flex items-center gap-5 text-sm sm:px-6">
+              <span className="text-gray-500">
+                <span className="font-semibold text-gray-900 tabular-nums">{state.players.length}</span> spelers
+              </span>
+              <span className="text-gray-300" aria-hidden="true">·</span>
+              <span className={poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-500'}>
+                <span className={`font-semibold tabular-nums ${poolPlayers.length > 0 ? 'text-amber-700' : 'text-gray-900'}`}>
+                  {poolPlayers.length}
+                </span> onverdeeld
+              </span>
+              <span className="text-gray-300" aria-hidden="true">·</span>
+              <span className="text-gray-500">
+                <span className="font-semibold text-gray-900 tabular-nums">{state.teams.length}</span> teams
+              </span>
+            </div>
           </div>
         </div>
 
-        <main className="max-w-screen-2xl mx-auto px-6 pt-6 pb-14 flex gap-6">
-          {/* Left: Player pool + category info */}
-          <div className="w-72 shrink-0 flex flex-col gap-4">
-            <div className="sticky top-[146px]">
+        <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-6 pb-14 flex flex-col lg:flex-row gap-6">
+          {/* Player pool + category info */}
+          <div className="w-full lg:w-72 lg:shrink-0 flex flex-col gap-4">
+            <div className="lg:sticky" style={{ top: 'var(--sticky-top, 8rem)' }}>
               <PlayerPool
                 players={poolPlayers}
                 selectedIds={selectedIds}
@@ -318,7 +338,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right: Teams */}
+          {/* Teams */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-6">
               <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
@@ -342,7 +362,7 @@ export default function App() {
               </div>
               <button
                 onClick={() => setShowAddTeam(true)}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                className="px-3 py-1.5 text-sm bg-accent text-white rounded-lg hover:bg-accent-dark font-medium"
               >
                 + Team
               </button>
@@ -356,14 +376,14 @@ export default function App() {
                 </span>
                 <button
                   onClick={() => setShowAddTeam(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-sm text-accent hover:text-accent-dark font-medium"
                 >
                   + Team toevoegen
                 </button>
               </div>
             ) : (
               <SortableContext items={visibleTeams.map(t => t.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-5">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(360px,100%),1fr))] gap-5">
                 {visibleTeams.map(team => (
                   <TeamCard
                     key={team.id}

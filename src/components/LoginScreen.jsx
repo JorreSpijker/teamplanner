@@ -29,7 +29,7 @@ export default function LoginScreen({ onLogin }) {
               type="text"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError(false) }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               autoFocus
             />
           </div>
@@ -39,7 +39,7 @@ export default function LoginScreen({ onLogin }) {
               type="password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(false) }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
           {error && (
@@ -47,7 +47,7 @@ export default function LoginScreen({ onLogin }) {
           )}
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent-dark"
           >
             Inloggen
           </button>

@@ -20,7 +20,7 @@ export default function CategoryInfo() {
         </div>
         <div className="h-px bg-gray-100" />
         <div className="flex items-start gap-3">
-          <span className="flex-shrink-0 w-5 h-5 rounded bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center mt-0.5">C</span>
+          <span className="flex-shrink-0 w-5 h-5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold flex items-center justify-center mt-0.5">C</span>
           <span className="text-sm text-gray-600 leading-relaxed">Geen eisen</span>
         </div>
       </div>

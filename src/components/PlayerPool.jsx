@@ -39,15 +39,15 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
   )
 
   return (
-    <div className="flex flex-col max-h-[calc(100vh-10rem)]">
+    <div className="flex flex-col lg:max-h-[calc(100vh-10rem)]">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-semibold text-gray-700">
           Beschikbaar <span className="font-normal text-gray-400">{players.length}</span>
         </span>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          title="Importeer spelers uit Excel"
+          aria-label="Importeer spelers uit Excel"
+          className="text-xs text-accent hover:text-accent-dark font-medium py-2 px-1"
         >
           + Excel
         </button>
@@ -62,17 +62,19 @@ export default function PlayerPool({ players, selectedIds, onSelect, onAddPlayer
       {importError && (
         <p className="mb-2 text-xs text-red-600">{importError}</p>
       )}
+      <label htmlFor="player-search" className="sr-only">Zoeken op naam</label>
       <input
+        id="player-search"
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Zoeken..."
-        className="mb-2 w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="mb-2 w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <div
         ref={setNodeRef}
         className={`flex-1 overflow-y-auto min-h-64 bg-white rounded-xl border p-3 flex flex-col gap-2 transition-colors ${
-          isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200'
+          isOver ? 'border-accent bg-accent-surface' : 'border-gray-200'
         }`}
       >
         {players.length === 0 ? (

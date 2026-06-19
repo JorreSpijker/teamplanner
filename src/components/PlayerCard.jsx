@@ -2,13 +2,11 @@ import { useState } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import EditPlayerModal from './EditPlayerModal'
+import { calculateAgeYears } from '../utils/dateUtils'
 
-function calculateAge(birthdate) {
-  if (!birthdate) return '?'
-  const today = new Date()
-  const birth = new Date(birthdate)
-  const age = Math.floor((today - birth) / (365.25 * 24 * 60 * 60 * 1000))
-  return isNaN(age) || age < 0 ? '?' : age
+function displayAge(birthdate) {
+  const age = calculateAgeYears(birthdate)
+  return age === null ? '?' : Math.floor(age)
 }
 
 export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay, isSelected, onSelect, onEditPlayer, onDeletePlayer }) {
@@ -57,11 +55,11 @@ export default function PlayerCard({ player, sourceTeamId, isDragging: isOverlay
             : genderColor
         } ${
           isDragging ? 'opacity-30' : 'cursor-grab active:cursor-grabbing'
-        } ${isDropOver && !isDragging ? 'border-t-2 border-t-blue-400' : ''} ${isOverlay ? 'shadow-xl cursor-grabbing rotate-1 scale-[1.03] ring-1 ring-black/[0.06]' : ''}`}
+        } ${isDropOver && !isDragging ? 'border-t-2 border-t-accent' : ''} ${isOverlay ? 'shadow-xl cursor-grabbing rotate-1 scale-[1.03] ring-1 ring-black/[0.06]' : ''}`}
       >
-        <span className="font-medium flex-1">{player.name}</span>
+        <span className="font-medium flex-1 min-w-0 truncate">{player.name}</span>
         <span className={`text-xs tabular-nums ${isSelected ? 'text-yellow-800' : player.gender === 'f' ? 'text-pink-700' : 'text-blue-700'}`}>
-          {calculateAge(player.birthdate)}j
+          {displayAge(player.birthdate)}j
         </span>
         <span className={`text-xs ${isSelected ? 'text-yellow-700' : player.gender === 'f' ? 'text-pink-700' : 'text-blue-600'}`}>
           {player.gender === 'f' ? '♀' : '♂'}

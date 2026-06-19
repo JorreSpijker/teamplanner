@@ -1,13 +1,12 @@
 import { useState } from 'react'
+import { calculateAgeYears } from '../utils/dateUtils'
 
 export default function AgeBandwidthBar({ players, maxSpread }) {
   const [hovered, setHovered] = useState(null)
   const entries = players
     .map(p => {
-      if (!p.birthdate) return null
-      const birth = new Date(p.birthdate)
-      const age = (Date.now() - birth) / (365.25 * 24 * 60 * 60 * 1000)
-      return isNaN(age) || age < 0 ? null : { age, gender: p.gender, name: p.name }
+      const age = calculateAgeYears(p.birthdate)
+      return age === null ? null : { age, gender: p.gender, name: p.name }
     })
     .filter(Boolean)
 
@@ -50,16 +49,21 @@ export default function AgeBandwidthBar({ players, maxSpread }) {
         {entries.map((e, i) => (
           <div
             key={i}
-            className="absolute -translate-x-1/2"
+            className="absolute -translate-x-1/2 focus:outline-none focus:ring-2 focus:ring-accent rounded-full"
             style={{ left: `${toPercent(e.age)}%`, top: '10px' }}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
+            onFocus={() => setHovered(i)}
+            onBlur={() => setHovered(null)}
+            tabIndex={0}
+            role="img"
+            aria-label={`${e.name} — ${e.age.toFixed(1)} jaar`}
           >
             <div className={`w-3 h-3 rounded-full border-2 border-white shadow-sm cursor-default ${
               e.gender === 'f' ? 'bg-pink-400' : 'bg-blue-400'
             }`} />
             {hovered === i && (
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg pointer-events-none">
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg pointer-events-none" aria-hidden="true">
                 {e.name} — {e.age.toFixed(1)}j
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
               </div>

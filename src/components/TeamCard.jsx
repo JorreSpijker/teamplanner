@@ -4,14 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import PlayerCard from './PlayerCard'
 import AgeBandwidthBar from './AgeBandwidthBar'
-
-function calculateAge(birthdate) {
-  if (!birthdate) return null
-  const today = new Date()
-  const birth = new Date(birthdate)
-  const age = (today - birth) / (365.25 * 24 * 60 * 60 * 1000)
-  return isNaN(age) || age < 0 ? null : age
-}
+import { calculateAgeYears } from '../utils/dateUtils'
 
 const U_CAT_MIN_YEAR = { U19: 2007, U17: 2009, U15: 2011 }
 
@@ -31,7 +24,7 @@ function getTeamColor(avgAge) {
 
 function getTeamStats(team, allPlayers) {
   const players = team.playerIds.map(id => allPlayers.find(p => p.id === id)).filter(Boolean)
-  const exactAges = players.map(p => calculateAge(p.birthdate)).filter(v => v !== null)
+  const exactAges = players.map(p => calculateAgeYears(p.birthdate)).filter(v => v !== null)
   const avgAge = exactAges.length
     ? Math.round(exactAges.reduce((a, b) => a + b, 0) / exactAges.length * 10) / 10
     : null
@@ -143,9 +136,10 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
       ref={setSortableRef}
       style={sortableStyle}
       className={`bg-white rounded-xl border overflow-hidden transition-colors ${
-        isOver ? 'border-blue-400 ring-2 ring-blue-100' : 'border-gray-200'
+        isOver ? 'border-accent ring-2 ring-accent-surface' : 'border-gray-200'
       }`}
     >
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{stats.validMsg}</div>
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-2">
@@ -167,18 +161,19 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
               value={nameValue}
               onChange={e => setNameValue(e.target.value)}
               onBlur={saveName}
+              maxLength={40}
               onKeyDown={e => {
                 if (e.key === 'Enter') saveName()
                 if (e.key === 'Escape') cancelName()
               }}
-              className="font-bold text-gray-900 text-base bg-white rounded px-1.5 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 border border-blue-300"
+              className="font-bold text-gray-900 text-base bg-white rounded px-1.5 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-accent border border-accent-subtle"
               autoFocus
             />
           ) : (
             <button
               onClick={() => setEditingName(true)}
               title="Klik om naam te wijzigen"
-              className="font-bold text-gray-900 text-base text-left truncate hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded w-full"
+              className="font-bold text-gray-900 text-base text-left truncate hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded w-full"
             >
               {team.name}
             </button>
@@ -228,7 +223,7 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
             <select
               value={team.category}
               onChange={e => onUpdate({ category: e.target.value })}
-              className="bg-transparent font-semibold text-gray-800 focus:outline-none cursor-pointer"
+              className="bg-transparent font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-accent rounded cursor-pointer"
             >
               <option value="A">A</option>
               <option value="B">B</option>
@@ -300,12 +295,12 @@ export default function TeamCard({ team, players: allPlayers, selectedIds, onSel
       {/* Drop zone */}
       <div
         ref={setDropRef}
-        className={`p-3 flex flex-col gap-2 transition-colors ${isOver ? 'bg-blue-50' : ''}`}
+        className={`p-3 flex flex-col gap-2 transition-colors ${isOver ? 'bg-accent-surface' : ''}`}
       >
         {stats.players.length === 0 ? (
           <div className={`flex items-center justify-center rounded-lg border-2 border-dashed min-h-[88px] transition-colors ${
             isOver
-              ? 'border-blue-400 bg-blue-50 text-blue-500'
+              ? 'border-accent bg-accent-surface text-accent'
               : 'border-gray-200 text-gray-400'
           }`}>
             <span className="text-xs select-none">Sleep spelers hiernaartoe</span>
