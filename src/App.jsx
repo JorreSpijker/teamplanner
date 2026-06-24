@@ -14,7 +14,8 @@ import { exportDocx } from './utils/exportDocx'
 import { exportXlsx } from './utils/exportXlsx'
 
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(() => sessionStorage.getItem('auth') === '1')
+  const loginEnabled = import.meta.env.VITE_LOGIN_ENABLED !== 'false'
+  const [loggedIn, setLoggedIn] = useState(() => !loginEnabled || sessionStorage.getItem('auth') === '1')
   const [state, setState] = useState(() => loadState())
   const [activePlayer, setActivePlayer] = useState(null)
   const [showAddTeam, setShowAddTeam] = useState(false)
